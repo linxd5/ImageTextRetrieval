@@ -6,7 +6,7 @@ from vocab import build_dictionary
 import homogeneous_data
 from torch.autograd import Variable
 import time
-from model import jianzhuNet, PairwiseRankingLoss
+from model import ImgSenRanking, PairwiseRankingLoss
 import numpy
 from tools import encode_sentences, encode_images
 from evaluation import i2t, t2i, i2t_arch, t2i_arch
@@ -84,13 +84,13 @@ def trainer(data='coco',
     # Each sentence in the minibatch have same length (for encoder)
     train_iter = homogeneous_data.HomogeneousData([train[0], train[1]], batch_size=batch_size, maxlen=maxlen_w)
 
-    jianzhu_model = jianzhuNet(model_options)
-    jianzhu_model = jianzhu_model.cuda()
+    img_sen_model = ImgSenRanking(model_options)
+    img_sen_model = img_sen_model.cuda()
 
     loss_fn = PairwiseRankingLoss(margin=margin)
     loss_fn = loss_fn.cuda()
 
-    params = filter(lambda p: p.requires_grad, jianzhu_model.parameters())
+    params = filter(lambda p: p.requires_grad, img_sen_model.parameters())
     optimizer = torch.optim.Adam(params, lrate)
 
     uidx = 0
@@ -116,7 +116,7 @@ def trainer(data='coco',
             im = Variable(torch.from_numpy(im).cuda())
             # Update
             ud_start = time.time()
-            x, im = jianzhu_model(x, im)
+            x, im = img_sen_model(x, im)
             cost = loss_fn(im, x)
             optimizer.zero_grad()
             cost.backward()
@@ -134,7 +134,7 @@ def trainer(data='coco',
                 curr_model['options'] = model_options
                 curr_model['worddict'] = worddict
                 curr_model['word_idict'] = word_idict
-                curr_model['jianzhu_model'] = jianzhu_model
+                curr_model['img_sen_model'] = img_sen_model
 
                 ls, lim = encode_sentences(curr_model, dev[0]), encode_images(curr_model, dev[1])
 

@@ -38,7 +38,7 @@ def encode_sentences(model, X, verbose=False, batch_size=128):
                 x[:k,idx] = s
 
             x = Variable(torch.from_numpy(x).cuda())
-            ff = model['jianzhu_model'].forward_sens(x)
+            ff = model['img_sen_model'].forward_sens(x)
 
             for ind, c in enumerate(caps):
                 features[c] = ff[ind].data.cpu().numpy()
@@ -50,7 +50,7 @@ def encode_images(model, IM):
     Encode images into the joint embedding space
     """
     IM = Variable(torch.from_numpy(IM).cuda())
-    images = model['jianzhu_model'].forward_imgs(IM)
+    images = model['img_sen_model'].forward_imgs(IM)
     images = images.data.cpu().numpy()
     return images
 

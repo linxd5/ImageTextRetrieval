@@ -1,23 +1,30 @@
 import torch
-from utils import l2norm
+from utils import l2norm, xavier_weight
 from torch.autograd import Variable
+import torch.nn.init as init
 
-class jianzhuNet(torch.nn.Module):
+class ImgSenRanking(torch.nn.Module):
     def __init__(self, model_options):
-        super(jianzhuNet, self).__init__()
-        self.image_fc = torch.nn.Linear(model_options['dim_image'], model_options['dim'])
-        self.rnn = torch.nn.LSTM(model_options['dim_word'], model_options['dim'], 1)
+        super(ImgSenRanking, self).__init__()
+        self.linear = torch.nn.Linear(model_options['dim_image'], model_options['dim'])
+        self.lstm = torch.nn.LSTM(model_options['dim_word'], model_options['dim'], 1)
         self.embedding = torch.nn.Embedding(model_options['n_words'], model_options['dim_word'])
         self.model_options = model_options
+        self.init_weights()
+
+    def init_weights(self):
+        xavier_weight(self.linear.weight)
+        # init.xavier_normal(self.linear.weight)
+        self.linear.bias.data.fill_(0)
 
     def forward(self, x, im):
         x = self.embedding(x)
-        im = self.image_fc(im)
+        im = self.linear(im)
 
         if self.model_options['encoder'] == 'bow':
             x = x.sum(0).squeeze(0)
         else:
-            _, (x, _) = self.rnn(x)
+            _, (x, _) = self.lstm(x)
             x = x.squeeze(0)
 
         return l2norm(x), l2norm(im)
@@ -27,12 +34,12 @@ class jianzhuNet(torch.nn.Module):
         if self.model_options['encoder'] == 'bow':
             x = x.sum(0).squeeze(0)
         else:
-            _, (x, _) = self.rnn(x)
+            _, (x, _) = self.lstm(x)
             x = x.squeeze(0)
         return l2norm(x)
 
     def forward_imgs(self, im):
-        im = self.image_fc(im)
+        im = self.linear(im)
         return l2norm(im)
 
 class PairwiseRankingLoss(torch.nn.Module):

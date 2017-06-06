@@ -78,6 +78,8 @@ def i2t_arch(images, captions):
         # Get query image
         im = images[index]
         # Compute scores
+        print 'im: ', im.shape
+        print captions.shape
         d = numpy.dot(im, captions.T)
         inds = numpy.argsort(d)[::-1]
         ranks[index] = numpy.where(caps_obj_id[inds] == imgs_obj_id[index])[0][0]
