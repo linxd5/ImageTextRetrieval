@@ -1,0 +1,71 @@
+div.header {
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .container {
+        max-width: 100000px;
+    }
+}
+
+div.query_input {
+    overflow: hidden;
+    margin-bottom: 50px;
+}
+
+
+div.left {
+    float: left;
+    width: 50%;
+    padding-right: 80px;
+}
+
+div.left textarea#query_sentence {
+    float: right;
+}
+
+div.right {
+    float: right;
+    width: 50%;
+    padding-left: 80px;
+}
+
+#query_sentence {
+    padding: 20px;
+}
+
+img {
+    height: 200px;
+    margin: 10px;
+}
+
+div.query_other {
+    text-align: center;
+}
+
+div.query_other input {
+    width: 80px;
+    padding: 3px;
+    margin-right: 20px;
+}
+
+div.query_other button {
+    margin-right: 20px;
+}
+
+form {
+    margin-bottom: 50px;
+}
+
+div#img_result {
+    margin-bottom: 50px;
+}
+
+div#text_result {
+    margin-bottom: 50px;
+}
+
+div#text_result div {
+    margin: 10px;
+}
+

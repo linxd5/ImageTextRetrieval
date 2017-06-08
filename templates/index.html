@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>图文互搜</title>
+    <meta charset="utf-8">
+    <!--保存为本地文件可以加快网站加载速度-->
+    <link href="../static/web/bootstrap.min.css" rel="stylesheet" />
+    <link href="../static/web/jumbotron-narrow.css" rel="stylesheet" />
+    <link href="../static/web/index.css" rel="stylesheet" />
+    <script src="../static/web/jquery.min.js"></script>
+    <script src="../static/web/index.js"></script>
+    <!--<script src="../static/web/temp.js"></script>-->
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon_container">
+            </div>
+            <h3 class="text-muted">相似建筑搜索</h3>
+        </div>
+        <form class="query" method="POST" enctype="multipart/form-data">
+            <div class="query_input">
+                <div class="left">
+                    <textarea id="query_sentence" name="query_sentence" cols="20" rows="10" placeholder="请输入建筑描述"></textarea>
+                </div>
+                <div class="right">
+                    <label>请选择建筑图片：</label>
+                    <input type="file" name="query_image" id="query_image"/>
+                </div>
+            </div>
+            <div class="query_other">
+                <label>相似建筑数目：</label>
+                <input type="text" name="k_input" value="5" />
+                <button id="query_button" class="btn btn-primary" type="button">查询</button>
+                <button id="reset_button" class="btn btn-primary" type="button">清空输入</button>
+            </div>
+        </form>
+        <div id="img_result"></div>
+        <div id="text_result"></div>
+    </div>
+</body>
+</html>
