@@ -11,7 +11,11 @@ import numpy
 from tools import encode_sentences, encode_images
 from evaluation import i2t, t2i, i2t_arch, t2i_arch
 
+from hyperboard import Agent
 
+cur_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+
+# @profile
 def trainer(data='coco',
             margin=0.2,
             dim=1024,
@@ -23,12 +27,42 @@ def trainer(data='coco',
             decay_c=0.0,
             grad_clip=2.0,
             maxlen_w=150,
-            optimizer='adam',
             batch_size=128,
-            saveto='vse/coco.npz',
+            saveto='vse/coco',
             validFreq=100,
             lrate=0.0002,
             reload_=False):
+
+
+    hyper_params = {
+        'data': data,
+        'encoder': encoder,
+        'batch_size': batch_size,
+        'time': cur_time,
+        'lrate': lrate,
+    }
+
+    i2t_r1 = dict([('i2t_recall', 'r1')]+hyper_params.items())
+    i2t_r5 = dict([('i2t_recall', 'r5')]+hyper_params.items())
+    i2t_r10 = dict([('i2t_recall', 'r10')]+hyper_params.items())
+    t2i_r1 = dict([('t2i_recall', 'r1')]+hyper_params.items())
+    t2i_r5 = dict([('t2i_recall', 'r5')]+hyper_params.items())
+    t2i_r10 = dict([('t2i_recall', 'r10')]+hyper_params.items())
+
+    i2t_med = dict([('i2t_med', 'i2t_med')]+hyper_params.items())
+    t2i_med = dict([('t2i_med', 't2i_med')]+hyper_params.items())
+
+    agent = Agent(port=5020)
+    i2t_r1_agent = agent.register(i2t_r1, 'recall', overwrite=True)
+    i2t_r5_agent = agent.register(i2t_r5, 'recall', overwrite=True)
+    i2t_r10_agent = agent.register(i2t_r10, 'recall', overwrite=True)
+    t2i_r1_agent = agent.register(t2i_r1, 'recall', overwrite=True)
+    t2i_r5_agent = agent.register(t2i_r5, 'recall', overwrite=True)
+    t2i_r10_agent = agent.register(t2i_r10, 'recall', overwrite=True)
+
+    i2t_med_agent = agent.register(i2t_med, 'median', overwrite=True)
+    t2i_med_agent = agent.register(t2i_med, 'median', overwrite=True)
+
 
     # Model options
     model_options = {}
@@ -43,7 +77,6 @@ def trainer(data='coco',
     model_options['decay_c'] = decay_c
     model_options['grad_clip'] = grad_clip
     model_options['maxlen_w'] = maxlen_w
-    model_options['optimizer'] = optimizer
     model_options['batch_size'] = batch_size
     model_options['saveto'] = saveto
     model_options['validFreq'] = validFreq
@@ -79,7 +112,8 @@ def trainer(data='coco',
     word_idict[0] = '<eos>'
     word_idict[1] = 'UNK'
 
-    # TODO: init_params and init_tparams
+    model_options['worddict'] = worddict
+    model_options['word_idict'] = word_idict
 
     # Each sentence in the minibatch have same length (for encoder)
     train_iter = homogeneous_data.HomogeneousData([train[0], train[1]], batch_size=batch_size, maxlen=maxlen_w)
@@ -140,7 +174,8 @@ def trainer(data='coco',
 
                 r1, r5, r10, medr = 0.0, 0.0, 0.0, 0
                 r1i, r5i, r10i, medri = 0.0, 0.0, 0.0, 0
-                if data == 'arch':
+                r_time = time.time()
+                if data == 'arch' or data == 'arch_small':
                     (r1, r5, r10, medr) = i2t_arch(lim, ls)
                     print "Image to text: %.1f, %.1f, %.1f, %.1f" % (r1, r5, r10, medr)
                     (r1i, r5i, r10i, medri) = t2i_arch(lim, ls)
@@ -151,16 +186,28 @@ def trainer(data='coco',
                     (r1i, r5i, r10i, medri) = t2i(lim, ls)
                     print "Text to image: %.1f, %.1f, %.1f, %.1f" % (r1i, r5i, r10i, medri)
 
+                print "Cal Recall@K using %ss" %(time.time()-r_time)
+
+                record_num = uidx / validFreq
+                agent.append(i2t_r1_agent, record_num, r1)
+                agent.append(i2t_r5_agent, record_num, r5)
+                agent.append(i2t_r10_agent, record_num, r10)
+                agent.append(t2i_r1_agent, record_num, r1i)
+                agent.append(t2i_r5_agent, record_num, r5i)
+                agent.append(t2i_r10_agent, record_num, r10i)
+
+                agent.append(i2t_med_agent, record_num, medr)
+                agent.append(t2i_med_agent, record_num, medri)
+
                 currscore = r1 + r5 + r10 + r1i + r5i + r10i
                 if currscore > curr:
                     curr = currscore
 
-                    # # Save model
-                    # print 'Saving...',
-                    # params = unzip(tparams)
-                    # numpy.savez(saveto, **params)
-                    # pkl.dump(model_options, open('%s.pkl'%saveto, 'wb'))
-                    # print 'Done'
+                    # Save model
+                    print 'Saving model...',
+                    pkl.dump(model_options, open('%s_params.pkl'%saveto, 'wb'))
+                    torch.save(img_sen_model.state_dict(), '%s_model.pkl'%saveto)
+                    print 'Done'
 
         print 'Seen %d samples'%n_samples
 

@@ -7,7 +7,8 @@ def encode_sentences(model, X, verbose=False, batch_size=128):
     """
     Encode sentences into the joint embedding space
     """
-    features = numpy.zeros((len(X), model['options']['dim']), dtype='float32')
+    # features = numpy.zeros((len(X), model['options']['dim']), dtype='float32')
+    features = Variable(torch.zeros(len(X), model['options']['dim']).cuda())
 
     # length dictionary
     ds = defaultdict(list)
@@ -41,7 +42,8 @@ def encode_sentences(model, X, verbose=False, batch_size=128):
             ff = model['img_sen_model'].forward_sens(x)
 
             for ind, c in enumerate(caps):
-                features[c] = ff[ind].data.cpu().numpy()
+                # features[c] = ff[ind].data.cpu().numpy()
+                features[c] = ff[ind]
 
     return features
 
@@ -51,6 +53,6 @@ def encode_images(model, IM):
     """
     IM = Variable(torch.from_numpy(IM).cuda())
     images = model['img_sen_model'].forward_imgs(IM)
-    images = images.data.cpu().numpy()
+    # images = images.data.cpu().numpy()
     return images
 
