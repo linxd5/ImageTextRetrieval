@@ -1,7 +1,12 @@
+# coding: utf-8
 import torch
 from utils import l2norm, xavier_weight
 from torch.autograd import Variable
 import torch.nn.init as init
+from gensim.models.word2vec import Word2Vec
+import numpy
+
+wvModel = Word2Vec.load('static/word2vec-chi/word2vec_news.model')
 
 class ImgSenRanking(torch.nn.Module):
     def __init__(self, model_options):
@@ -17,26 +22,59 @@ class ImgSenRanking(torch.nn.Module):
         # init.xavier_normal(self.linear.weight)
         self.linear.bias.data.fill_(0)
 
-    def forward(self, x, im):
-        x = self.embedding(x)
+    def forward(self, x_id, im, x):
+        x_id_emb = self.embedding(x_id)
         im = self.linear(im)
 
+
+
+        x_w2v = torch.zeros(*x_id_emb.size())
+        x_cat = None
+        if self.model_options['concat']:
+            for i, text in enumerate(x):
+                for j, word in enumerate(text.split()):
+                    try:
+                        x_w2v[j, i] = torch.from_numpy(wvModel[word.decode('utf8')])
+                    except KeyError:
+                        pass
+            x_w2v = Variable(x_w2v.cuda())
+            x_cat = torch.cat([x_id_emb, x_w2v])
+        else:
+            x_cat = x_id_emb
+
+
         if self.model_options['encoder'] == 'bow':
-            x = x.sum(0).squeeze(0)
+            x_cat = x_cat.sum(0).squeeze(0)
         else:
             _, (x, _) = self.lstm(x)
             x = x.squeeze(0)
 
-        return l2norm(x), l2norm(im)
+        return l2norm(x_cat), l2norm(im)
 
-    def forward_sens(self, x):
-        x = self.embedding(x)
+    def forward_sens(self, x_id, x):
+        x_id_emb = self.embedding(x_id)
+
+        x_w2v = torch.zeros(*x_id_emb.size())
+        x_cat = None
+        if self.model_options['concat']:
+            for i, text in enumerate(x):
+                for j, word in enumerate(text):
+                    try:
+                        x_w2v[j, i] = torch.from_numpy(wvModel[word.decode('utf8')])
+                    except KeyError:
+                        pass
+
+            x_w2v = Variable(x_w2v.cuda())
+            x_cat = torch.cat([x_id_emb, x_w2v])
+        else:
+            x_cat = x_id_emb
+
         if self.model_options['encoder'] == 'bow':
-            x = x.sum(0).squeeze(0)
+            x_cat = x_cat.sum(0).squeeze(0)
         else:
             _, (x, _) = self.lstm(x)
             x = x.squeeze(0)
-        return l2norm(x)
+        return l2norm(x_cat)
 
     def forward_imgs(self, im):
         im = self.linear(im)

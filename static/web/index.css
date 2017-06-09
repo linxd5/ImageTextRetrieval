@@ -67,5 +67,11 @@ div#text_result {
 
 div#text_result div {
     margin: 10px;
+    overflow: hidden;
+}
+
+div#text_result div a {
+    float: left;
+    margin: 10px;
 }
 

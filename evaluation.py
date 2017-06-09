@@ -22,8 +22,8 @@ def evalrank(model, data, split='dev'):
 
     if data == 'arch':
         # Find the good case in test dataset
-        # (r1, r5, r10, medr) = i2t_arch_case(lim, ls, X[0])
-        # print "Image to text: %.1f, %.1f, %.1f, %.1f" % (r1, r5, r10, medr)
+        (r1, r5, r10, medr) = i2t_arch_case(lim, ls, X[0])
+        print "Image to text: %.1f, %.1f, %.1f, %.1f" % (r1, r5, r10, medr)
         (r1i, r5i, r10i, medri) = t2i_arch_case(lim, ls, X[0])
         print "Text to image: %.1f, %.1f, %.1f, %.1f" % (r1i, r5i, r10i, medri)
     else:
@@ -40,17 +40,18 @@ def i2t(images, captions, npts=None):
     Captions: (5N, K) matrix of captions
     """
     if npts == None:
-        npts = images.shape[0] / 5
+        npts = images.size()[0] / 5
 
     ranks = numpy.zeros(npts)
     for index in range(npts):
 
         # Get query image
-        im = images[5 * index].reshape(1, images.shape[1])
+        im = images[5 * index].unsqueeze(0)
 
         # Compute scores
-        d = numpy.dot(im, captions.T).flatten()
-        inds = numpy.argsort(d)[::-1]
+        d = torch.mm(im, captions.t())
+        d_sorted, inds = torch.sort(d, descending=True)
+        inds = inds.data.squeeze(0).cpu().numpy()
 
         # Score
         rank = 1e20
@@ -76,9 +77,9 @@ def t2i(images, captions, npts=None, data='f8k'):
     Captions: (5N, K) matrix of captions
     """
     if npts == None:
-        npts = images.shape[0] / 5
+        npts = images.size()[0] / 5
 
-    ims = numpy.array([images[i] for i in range(0, len(images), 5)])
+    ims = torch.cat([images[i].unsqueeze(0) for i in range(0, len(images), 5)])
 
     ranks = numpy.zeros(5 * npts)
     for index in range(npts):
@@ -87,11 +88,11 @@ def t2i(images, captions, npts=None, data='f8k'):
         queries = captions[5*index : 5*index + 5]
 
         # Compute scores
-        d = numpy.dot(queries, ims.T)
-        inds = numpy.zeros(d.shape)
-        for i in range(len(inds)):
-            inds[i] = numpy.argsort(d[i])[::-1]
-            ranks[5 * index + i] = numpy.where(inds[i] == index)[0][0]
+        d = torch.mm(queries, ims.t())
+        for i in range(d.size()[0]):
+            d_sorted, inds = torch.sort(d[i], descending=True)
+            inds = inds.data.squeeze(0).cpu().numpy()
+            ranks[5 * index + i] = numpy.where(inds == index)[0][0]
 
     # Compute metrics
     r1 = 100.0 * len(numpy.where(ranks < 1)[0]) / len(ranks)
@@ -193,13 +194,9 @@ def t2i_arch_case(images, captions, caps_orig):
         ranks[index] = numpy.where(imgs_obj_id[inds] == caps_obj_id[index])[0][0]
         temp_rank = int(ranks[index])
         if temp_rank == 0 and print_num > 0:
-            print 'index: ', index
             print 't2i:  %d' %(10-print_num)
             print 'caption: ', caps_orig[index]
             print 'img_url: ', imgs_url[inds[0]]
-            print 'cap: ', cap
-            import time
-            time.sleep(1000)
             print '\n\n'
             print_num -= 1
 

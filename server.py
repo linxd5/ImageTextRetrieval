@@ -59,8 +59,8 @@ def query():
     query_img = request.files['query_image']
     img_name = query_img.filename
     upload_img = os.path.join(app.config['UPLOAD_FOLDER'], img_name)
-    sim_images, sim_image_degree = [], []
-    sim_texts, sim_text_degree = [], []
+    sim_images, sim_images_url = [], []
+    sim_texts, sim_texts_url = [], []
     if img_name:
         query_img.save(upload_img)
         img_vec = image_transform(Image.open(upload_img).convert('RGB')).unsqueeze(0)
@@ -70,24 +70,25 @@ def query():
         inds = inds.data.squeeze(0).cpu().numpy()
         # sim_text_degree = 1-distance[0][:k_input]/distance[0][-1]
         sim_texts = np.array(texts_orig)[inds[:k_input]]
+        sim_texts_url = np.array(texts_url)[inds[:k_input]]
         # sim_texts, sim_text_degree = sim_texts.tolist(), sim_text_degree.tolist()
-        sim_texts, sim_text_degree = sim_texts.tolist(), sim_text_degree
+        sim_texts, sim_texts_url = sim_texts.tolist(), sim_texts_url.tolist()
     if query_sen:
         query_sen = ' '.join(jieba.analyse.extract_tags(query_sen, topK=100, withWeight=False, allowPOS=()))
         query_sen = [query_sen]
         sentence = encode_sentences(curr_model, query_sen)
-        # d = torch.mm(sentence, images_dump.t())
         d = torch.mm(sentence, images_dump.t())
         d_sorted, inds = torch.sort(d, descending=True)
         inds = inds.data.squeeze(0).cpu().numpy()
         # sim_image_degree = 1-distance[0][:k_input]/distance[0][-1]
         sim_images = np.array(images_path)[inds[:k_input]]
+        sim_images_url = np.array(images_url)[inds[:k_input]]
         # sim_images, sim_image_degree = sim_images.tolist(), sim_image_degree.tolist()
-        sim_images, sim_image_degree = sim_images.tolist(), sim_image_degree
+        sim_images, sim_images_url = sim_images.tolist(), sim_images_url.tolist()
 
     upload_img = upload_img if img_name else 'no_upload_img'
-    return jsonify(sim_images=sim_images, sim_image_degree=sim_image_degree,
-                   upload_img=upload_img, sim_texts=sim_texts, sim_text_degree=sim_text_degree)
+    return jsonify(sim_images=sim_images, sim_images_url=sim_images_url,
+                   upload_img=upload_img, sim_texts=sim_texts, sim_texts_url=sim_texts_url)
 
 
 if __name__ == "__main__":

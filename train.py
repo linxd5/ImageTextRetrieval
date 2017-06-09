@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import torch
 import os
 import cPickle as pkl
@@ -31,6 +33,7 @@ def trainer(data='coco',
             saveto='vse/coco',
             validFreq=100,
             lrate=0.0002,
+            concat=True,
             reload_=False):
 
 
@@ -40,6 +43,7 @@ def trainer(data='coco',
         'batch_size': batch_size,
         'time': cur_time,
         'lrate': lrate,
+        'concat': concat,
     }
 
     i2t_r1 = dict([('i2t_recall', 'r1')]+hyper_params.items())
@@ -82,6 +86,7 @@ def trainer(data='coco',
     model_options['validFreq'] = validFreq
     model_options['lrate'] = lrate
     model_options['reload_'] = reload_
+    model_options['concat'] = concat
 
     print model_options
 
@@ -139,18 +144,18 @@ def trainer(data='coco',
             n_samples += len(x)
             uidx += 1
 
-            x, im = homogeneous_data.prepare_data(x, im, worddict, maxlen=maxlen_w, n_words=n_words)
+            x_id, im = homogeneous_data.prepare_data(x, im, worddict, maxlen=maxlen_w, n_words=n_words)
 
             if x == None:
                 print 'Minibatch with zero sample under length ', maxlen_w
                 uidx -= 1
                 continue
 
-            x = Variable(torch.from_numpy(x).cuda())
+            x_id = Variable(torch.from_numpy(x_id).cuda())
             im = Variable(torch.from_numpy(im).cuda())
             # Update
             ud_start = time.time()
-            x, im = img_sen_model(x, im)
+            x, im = img_sen_model(x_id, im, x)
             cost = loss_fn(im, x)
             optimizer.zero_grad()
             cost.backward()

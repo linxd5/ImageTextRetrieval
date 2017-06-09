@@ -1,3 +1,6 @@
+
+# coding: utf-8
+
 import numpy
 from collections import defaultdict
 import torch
@@ -33,13 +36,14 @@ def encode_sentences(model, X, verbose=False, batch_size=128):
 
             seqs = []
             for i, cc in enumerate(caption):
+                cc = [w.encode('utf8') for w in cc]
                 seqs.append([model['worddict'][w] if d[w] > 0 and model['worddict'][w] < model['options']['n_words'] else 1 for w in cc])
             x = numpy.zeros((k+1, len(caption))).astype('int64')
             for idx, s in enumerate(seqs):
                 x[:k,idx] = s
 
             x = Variable(torch.from_numpy(x).cuda())
-            ff = model['img_sen_model'].forward_sens(x)
+            ff = model['img_sen_model'].forward_sens(x, caption)
 
             for ind, c in enumerate(caps):
                 # features[c] = ff[ind].data.cpu().numpy()

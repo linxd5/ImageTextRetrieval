@@ -15,7 +15,7 @@ import torchvision.models as models
 from torch.autograd import Variable
 
 dataset_dir = 'static/dataset/arch'
-max_num = 1000000
+max_num = 1000
 
 # In[2]:
 
@@ -52,7 +52,7 @@ def pre_transforms():
     for k, item in enumerate(train_data_pair):
         if k % 100 == 0:
             print 'Processing %d/%d' %(k, len(train_data_pair))
-        caption = ' '.join(jieba.analyse.extract_tags(item['caption'], topK=100, withWeight=False, allowPOS=()))
+        caption = ' '.join(jieba.analyse.extract_tags(item['caption'], topK=20, withWeight=False, allowPOS=()))
         if len(caption) == 0:
             continue
 
@@ -86,7 +86,7 @@ def pre_transforms():
         if k % 100 == 0:
             print 'Processing %d/%d' %(k, len(dev_data_pair))
         if item['obj_id'] not in caps_obj_id:
-            caption = ' '.join(jieba.analyse.extract_tags(item['caption'], topK=100, withWeight=False, allowPOS=()))
+            caption = ' '.join(jieba.analyse.extract_tags(item['caption'], topK=20, withWeight=False, allowPOS=()))
             if len(caption) == 0:
                 continue
 
@@ -133,7 +133,7 @@ def pre_transforms():
         if k % 100 == 0:
             print 'Processing %d/%d' %(k, len(test_data_pair))
         if item['obj_id'] not in caps_obj_id_test:
-            caption = ' '.join(jieba.analyse.extract_tags(item['caption'], topK=100, withWeight=False, allowPOS=()))
+            caption = ' '.join(jieba.analyse.extract_tags(item['caption'], topK=20, withWeight=False, allowPOS=()))
             if len(caption) == 0:
                 continue
 

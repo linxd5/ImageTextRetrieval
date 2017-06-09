@@ -28,21 +28,26 @@ $(function () {
                 query_button.removeAttr('disabled');
                 query_button.text('查询');
                 console.log(response);
-                var img_dirs = response['sim_images'];
+                var imgs_dir = response['sim_images'];
                 var upload_img = response['upload_img'];
                 var texts = response['sim_texts'];
+                var imgs_url = response['sim_images_url'];
+                var texts_url = response['sim_texts_url'];
                 if (upload_img !== 'no_upload_img') {
                     upload_img = '<img src="' + upload_img + '" id="upload_img" alt="upload_img"/>';
                     $('#query_image').after(upload_img)
                 }
-                for (num in img_dirs) {
-                    var img_dir = '../'+img_dirs[num].replace(/%/g, '%25');
+                for (num in imgs_dir) {
+                    var img_dir = '../'+imgs_dir[num].replace(/%/g, '%25');
                     var img_html = '<img src="' + img_dir + '" />';
-                    $('#img_result').append(img_html);
+                    var img_url = '<a href="'+imgs_url[num]+'">' + img_html + '</a>';
+                    $('#img_result').append(img_url);
                 }
                 for (num in texts) {
                     var text_html = '<div>' + texts[num] + '</div>';
-                    $('#text_result').append(text_html);
+                    var text_url = '<a href="'+texts_url[num]+'"> url </a>';
+                    var text_div = '<div>' + text_url + text_html + '</div>';
+                    $('#text_result').append(text_div);
                 }
             },
             error: function (error) {
