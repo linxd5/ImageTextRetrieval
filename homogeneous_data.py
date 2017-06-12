@@ -14,6 +14,7 @@ class HomogeneousData():
         self.reset()
 
     def prepare(self):
+        # self.caps = [cap[:self.maxlen] for cap in self.data[0]]
         self.caps = self.data[0]
         self.feats = self.data[1]
 
@@ -99,7 +100,7 @@ def prepare_data(caps, features, worddict, maxlen=None, n_words=10000):
         seqs = new_seqs
 
         if len(lengths) < 1:
-            return None, None, None
+            return None, None
 
     # Why not use the following code?
     # y_np = numpy.asarray(feat_list, dtype=numpy.float32)

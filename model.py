@@ -26,8 +26,6 @@ class ImgSenRanking(torch.nn.Module):
         x_id_emb = self.embedding(x_id)
         im = self.linear(im)
 
-
-
         x_w2v = torch.zeros(*x_id_emb.size())
         x_cat = None
         if self.model_options['concat']:
@@ -46,8 +44,8 @@ class ImgSenRanking(torch.nn.Module):
         if self.model_options['encoder'] == 'bow':
             x_cat = x_cat.sum(0).squeeze(0)
         else:
-            _, (x, _) = self.lstm(x)
-            x = x.squeeze(0)
+            _, (x_cat, _) = self.lstm(x_cat)
+            x_cat = x_cat.squeeze(0)
 
         return l2norm(x_cat), l2norm(im)
 
@@ -72,8 +70,8 @@ class ImgSenRanking(torch.nn.Module):
         if self.model_options['encoder'] == 'bow':
             x_cat = x_cat.sum(0).squeeze(0)
         else:
-            _, (x, _) = self.lstm(x)
-            x = x.squeeze(0)
+            _, (x_cat, _) = self.lstm(x_cat)
+            x_cat = x_cat.squeeze(0)
         return l2norm(x_cat)
 
     def forward_imgs(self, im):

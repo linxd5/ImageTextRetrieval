@@ -75,7 +75,7 @@ def query():
         sim_texts, sim_texts_url = sim_texts.tolist(), sim_texts_url.tolist()
     if query_sen:
         query_sen = ' '.join(jieba.analyse.extract_tags(query_sen, topK=100, withWeight=False, allowPOS=()))
-        query_sen = [query_sen]
+        query_sen = [query_sen.encode('utf8')]
         sentence = encode_sentences(curr_model, query_sen)
         d = torch.mm(sentence, images_dump.t())
         d_sorted, inds = torch.sort(d, descending=True)

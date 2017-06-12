@@ -146,7 +146,7 @@ def trainer(data='coco',
 
             x_id, im = homogeneous_data.prepare_data(x, im, worddict, maxlen=maxlen_w, n_words=n_words)
 
-            if x == None:
+            if x_id == None:
                 print 'Minibatch with zero sample under length ', maxlen_w
                 uidx -= 1
                 continue
@@ -210,8 +210,8 @@ def trainer(data='coco',
 
                     # Save model
                     print 'Saving model...',
-                    pkl.dump(model_options, open('%s_params.pkl'%saveto, 'wb'))
-                    torch.save(img_sen_model.state_dict(), '%s_model.pkl'%saveto)
+                    pkl.dump(model_options, open('%s_params_%s.pkl'%(saveto, encoder), 'wb'))
+                    torch.save(img_sen_model.state_dict(), '%s_model_%s.pkl'%(saveto, encoder))
                     print 'Done'
 
         print 'Seen %d samples'%n_samples
