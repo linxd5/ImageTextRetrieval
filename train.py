@@ -146,7 +146,7 @@ def trainer(data='coco',
 
             x_id, im = homogeneous_data.prepare_data(x, im, worddict, maxlen=maxlen_w, n_words=n_words)
 
-            if x_id == None:
+            if x_id is None:
                 print 'Minibatch with zero sample under length ', maxlen_w
                 uidx -= 1
                 continue
